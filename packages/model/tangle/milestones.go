@@ -91,7 +91,7 @@ func GetSolidMilestoneIndex() milestone_index.MilestoneIndex {
 	}
 
 	if snapshot != nil {
-		return snapshot.LedgerIndex
+		return snapshot.SnapshotIndex
 	}
 
 	return 0
