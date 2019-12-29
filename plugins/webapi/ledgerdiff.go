@@ -68,6 +68,7 @@ func getLedgerDiffExt(i interface{}, c *gin.Context) {
 	}
 
 	ldr := &GetLedgerDiffExtReturn{}
+	ldr.Diff = make(map[string][]StringDiff)
 
 	diff, err := tangle.GetLedgerDiffForMilestoneExt(requestedIndex)
 	if err != nil {
@@ -84,7 +85,6 @@ func getLedgerDiffExt(i interface{}, c *gin.Context) {
 					valueChange += tx.Tx.Value
 				}
 			}
-			ldr.Diff = make(map[string][]StringDiff)
 			ldr.Diff[address] = append(ldr.Diff[address], StringDiff{bundle.GetTail().GetHash(), valueChange})
 		}
 	}
