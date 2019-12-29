@@ -322,6 +322,7 @@ type StringDiff struct {
 	BundleHash      string
 	TailHash        string
 	BundleStateDiff int64
+	TxHashes []string
 }
 
 ///////////////////////////////////////////////////////////////////
