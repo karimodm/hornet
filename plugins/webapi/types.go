@@ -319,8 +319,9 @@ type GetLedgerDiffExtReturn struct {
 }
 
 type StringDiff struct {
-	Hash string
-	Diff int64
+	BundleHash      string
+	TailHash        string
+	BundleStateDiff int64
 }
 
 ///////////////////////////////////////////////////////////////////
