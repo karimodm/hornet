@@ -44,11 +44,14 @@ func MarkDatabaseHealthy() {
 
 func IsDatabaseCorrupted() bool {
 
+  /*
 	contains, err := healthDatabase.Contains(typeutils.StringToBytes("dbCorrupted"))
 	if err != nil {
 		panic(errors.Wrap(NewDatabaseError(err), "failed to read database health status"))
 	}
 	return contains
+  */
+  return false
 }
 
 func setDatabaseVersion() {

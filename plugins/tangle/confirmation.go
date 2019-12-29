@@ -86,7 +86,7 @@ func confirmMilestone(milestoneIndex milestone_index.MilestoneIndex, milestoneTa
 			if !isValueSpamBundle {
 				for address, change := range ledgerChanges {
 					if address == "LEYNSIMADMXAUYRGXKKEXPHDMZLRISZBSRZXUMCIKP9JQDOXSCIUGKYFFNPPVPGCHEJAWWSDHCKGOORPC" {
-						fmt.Printf("*** TX %s - %d\n", txHash, change)
+						fmt.Printf("*** TX %s - %s - %d\n", bundle.GetHash(), txHash, change)
 					}
 					totalLedgerChanges[address] += change
 				}
