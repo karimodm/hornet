@@ -70,7 +70,7 @@ func runTangleProcessor(plugin *node.Plugin) {
 	var msIndex milestone_index.MilestoneIndex
 	for msIndex = 0; msIndex < 1293082; msIndex++ {
 		bundle, err := tangle.GetMilestone(msIndex)
-		if err != nil {
+		if err != nil && bundle == nil {
 			fmt.Printf("*** Milestone %d not found\n", msIndex)
 			continue
 		}
