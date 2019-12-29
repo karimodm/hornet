@@ -3,17 +3,19 @@ package tangle
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/iotaledger/hive.go/parameter"
 	"sync"
+
+	"github.com/iotaledger/hive.go/parameter"
+	"github.com/labstack/gommon/log"
 
 	"github.com/gohornet/hornet/packages/compressed"
 
 	"github.com/pkg/errors"
 
-	"github.com/iotaledger/iota.go/trinary"
 	"github.com/gohornet/hornet/packages/database"
 	"github.com/gohornet/hornet/packages/model/milestone_index"
 	"github.com/gohornet/hornet/packages/typeutils"
+	"github.com/iotaledger/iota.go/trinary"
 )
 
 var (
@@ -179,6 +181,118 @@ func GetLedgerDiffForMilestone(index milestone_index.MilestoneIndex) (map[trinar
 	}
 
 	return diff, nil
+}
+
+func GetLedgerDiffForMilestoneExt(index milestone_index.MilestoneIndex) (map[trinary.Hash][]*Bundle, error) {
+
+	ReadLockLedger()
+	defer ReadUnlockLedger()
+
+	diff := make(map[trinary.Hash][]*Bundle)
+
+	err := ledgerDatabase.ForEachPrefix(databaseKeyPrefixForLedgerDiff(index), func(entry database.Entry) (stop bool) {
+		address := trinary.MustBytesToTrytes(entry.Key, 81)
+		diff[address] = getConeForAddress(index, address)
+		return false
+	})
+
+	return diff, err
+}
+
+func getConeForAddress(index milestone_index.MilestoneIndex, findAddress string) []*Bundle {
+
+	milestoneBundle, _ := GetMilestone(index)
+	milestoneTail := milestoneBundle.GetTail()
+	txsToConfirm := make(map[string]struct{})
+	txsToTraverse := make(map[string]struct{})
+	totalLedgerChanges := make(map[string]int64)
+	txsToTraverse[milestoneTail.GetHash()] = struct{}{}
+
+	var filteredBundles []*Bundle
+
+	// Collect all tx to check by traversing the tangle
+	// Loop as long as new transactions are added in every loop cycle
+	for len(txsToTraverse) != 0 {
+
+		for txHash := range txsToTraverse {
+			delete(txsToTraverse, txHash)
+
+			if _, checked := txsToConfirm[txHash]; checked {
+				// Tx was already checked => ignore
+				continue
+			}
+
+			if SolidEntryPointsContain(txHash) {
+				// Ignore solid entry points (snapshot milestone included)
+				continue
+			}
+
+			tx, _ := GetTransaction(txHash)
+			if tx == nil {
+				log.Panicf("confirmMilestone: Transaction not found: %v", txHash)
+			}
+
+			confirmed, at := tx.GetConfirmed()
+			if confirmed {
+				if at > index {
+					log.Panicf("transaction %s was already confirmed by a newer milestone %d", tx.GetHash(), at)
+				}
+
+				// Tx is already confirmed by another milestone => ignore
+				if at < index {
+					continue
+				}
+
+				// If confirmationIndex == milestoneIndex,
+				// we have to walk the ledger changes again (for re-applying the ledger changes after shutdown)
+			}
+
+			// Mark the approvees to be traversed
+			txsToTraverse[tx.GetTrunk()] = struct{}{}
+			txsToTraverse[tx.GetBranch()] = struct{}{}
+
+			if !tx.IsTail() {
+				continue
+			}
+
+			bundleBucket, err := GetBundleBucket(tx.Tx.Bundle)
+			if err != nil {
+				log.Panicf("confirmMilestone: BundleBucket not found: %v, Error: %v", tx.Tx.Bundle, err)
+			}
+
+			bundle := bundleBucket.GetBundleOfTailTransaction(txHash)
+			if bundle == nil {
+				log.Panicf("confirmMilestone: Tx: %v, Bundle not found: %v", txHash, tx.Tx.Bundle)
+			}
+
+			if !bundle.IsValid() {
+				log.Panicf("confirmMilestone: Tx: %v, Bundle not valid: %v", txHash, tx.Tx.Bundle)
+			}
+
+			if !bundle.IsComplete() {
+				log.Panicf("confirmMilestone: Tx: %v, Bundle not complete: %v", txHash, tx.Tx.Bundle)
+			}
+
+			ledgerChanges, isValueSpamBundle := bundle.GetLedgerChanges()
+			if !isValueSpamBundle {
+				for address, change := range ledgerChanges {
+					if address == findAddress {
+						filteredBundles = append(filteredBundles, bundle)
+					}
+					totalLedgerChanges[address] += change
+				}
+			}
+
+			// we only add the tail transaction to the txsToConfirm set, in order to not
+			// accidentally skip cones, in case the other transactions (non-tail) of the bundle do not
+			// reference the same trunk transaction (as seen from the PoV of the bundle).
+			// if we wouldn't do it like this, we have a high chance of computing an
+			// inconsistent ledger state.
+			txsToConfirm[txHash] = struct{}{}
+		}
+	}
+
+	return filteredBundles
 }
 
 func ApplyLedgerDiff(diff map[trinary.Hash]int64, index milestone_index.MilestoneIndex) error {

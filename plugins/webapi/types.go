@@ -312,4 +312,15 @@ type GetLedgerDiffReturn struct {
 	Duration       int              `json:"duration"`
 }
 
+type GetLedgerDiffExtReturn struct {
+	Diff           map[string][]StringDiff `json:"diff"`
+	MilestoneIndex uint64                  `json:"milestoneIndex"`
+	Duration       int                     `json:"duration"`
+}
+
+type StringDiff struct {
+	Hash string
+	Diff int64
+}
+
 ///////////////////////////////////////////////////////////////////
