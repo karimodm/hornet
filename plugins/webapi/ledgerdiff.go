@@ -84,7 +84,7 @@ func getLedgerDiffExt(i interface{}, c *gin.Context) {
 					valueChange += tx.Tx.Value
 				}
 			}
-			ldr.Diff[address] = []StringDiff{}
+			ldr.Diff = make(map[string][]StringDiff)
 			ldr.Diff[address] = append(ldr.Diff[address], StringDiff{bundle.GetTail().GetHash(), valueChange})
 		}
 	}
