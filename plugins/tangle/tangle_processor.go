@@ -66,22 +66,25 @@ func runTangleProcessor(plugin *node.Plugin) {
 	runPersisters()
 
 	tangle.WriteLockLedger()
-	tangle.ReadLockLedger()
 	fmt.Printf("*** Milestone UNSOLIDIFIER\n")
 	var msIndex milestone_index.MilestoneIndex
 	for msIndex = 0; msIndex < 1293082; msIndex++ {
 		bundle, err := tangle.GetMilestone(msIndex)
 		if err != nil {
 			fmt.Printf("*** Milestone %d not found\n", msIndex)
+			continue
 		}
 		tailTx := bundle.GetTail()
 		if tailTx == nil {
 			fmt.Printf("*** Could not get tail for Milestone %d\n", msIndex)
+			continue
+		}
+		for _, tx := range bundle.GetTransactions() {
+			tx.SetSolid(false)
 		}
 		bundle.SetSolid(false)
 		fmt.Printf("*** Milestone %d set as unsolid\n", msIndex)
 	}
-	tangle.ReadUnlockLedger()
 	tangle.WriteUnlockLedger()
 
 	runGossipSolidifier()
