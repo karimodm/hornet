@@ -3,11 +3,11 @@ package tangle
 import (
 	"log"
 
-	iotago_bundle "github.com/iotaledger/iota.go/bundle"
-	"github.com/iotaledger/iota.go/trinary"
 	"github.com/gohornet/hornet/packages/bitutils"
 	"github.com/gohornet/hornet/packages/model/hornet"
 	"github.com/gohornet/hornet/packages/syncutils"
+	iotago_bundle "github.com/iotaledger/iota.go/bundle"
+	"github.com/iotaledger/iota.go/trinary"
 )
 
 func BundleCaller(handler interface{}, params ...interface{}) {
@@ -657,7 +657,7 @@ func (bundle *Bundle) IsSolid() bool {
 			return false
 		}
 		if tailTx.IsSolid() {
-			bundle.setSolid(true)
+			bundle.SetSolid(true)
 			return true
 		}
 		return false
@@ -666,7 +666,7 @@ func (bundle *Bundle) IsSolid() bool {
 	}
 }
 
-func (bundle *Bundle) setSolid(solid bool) {
+func (bundle *Bundle) SetSolid(solid bool) {
 	bundle.metadataMutex.Lock()
 	defer bundle.metadataMutex.Unlock()
 

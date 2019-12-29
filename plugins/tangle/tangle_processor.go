@@ -63,8 +63,28 @@ func configureTangleProcessor(plugin *node.Plugin) {
 func runTangleProcessor(plugin *node.Plugin) {
 	log.Info("Starting TangleProcessor ...")
 
-	runGossipSolidifier()
 	runPersisters()
+
+	tangle.WriteLockLedger()
+	tangle.ReadLockLedger()
+	fmt.Printf("*** Milestone UNSOLIDIFIER\n")
+	var msIndex milestone_index.MilestoneIndex
+	for msIndex = 0; msIndex < 1293082; msIndex++ {
+		bundle, err := tangle.GetMilestone(msIndex)
+		if err != nil {
+			fmt.Printf("*** Milestone %d not found\n", msIndex)
+		}
+		tailTx := bundle.GetTail()
+		if tailTx == nil {
+			fmt.Printf("*** Could not get tail for Milestone %d\n", msIndex)
+		}
+		bundle.SetSolid(false)
+		fmt.Printf("*** Milestone %d set as unsolid\n", msIndex)
+	}
+	tangle.ReadUnlockLedger()
+	tangle.WriteUnlockLedger()
+
+	runGossipSolidifier()
 
 	notifyReceivedTx := events.NewClosure(func(transaction *hornet.Transaction) {
 		receiveTxWorkerPool.Submit(transaction)
