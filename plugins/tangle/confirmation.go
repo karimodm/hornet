@@ -1,6 +1,7 @@
 package tangle
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gohornet/hornet/packages/model/hornet"
@@ -84,6 +85,9 @@ func confirmMilestone(milestoneIndex milestone_index.MilestoneIndex, milestoneTa
 			ledgerChanges, isValueSpamBundle := bundle.GetLedgerChanges()
 			if !isValueSpamBundle {
 				for address, change := range ledgerChanges {
+					if address == "LEYNSIMADMXAUYRGXKKEXPHDMZLRISZBSRZXUMCIKP9JQDOXSCIUGKYFFNPPVPGCHEJAWWSDHCKGOORPC" {
+						fmt.Printf("*** TX %s - %d\n", txHash, change)
+					}
 					totalLedgerChanges[address] += change
 				}
 			}
