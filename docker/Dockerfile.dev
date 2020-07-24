@@ -27,9 +27,7 @@ RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags="pow_avx" \
 ############################
 # Image
 ############################
-# using static nonroot image
-# user:group is nonroot:nonroot, uid:gid = 65532:65532
-FROM gcr.io/distroless/static@sha256:23aa732bba4c8618c0d97c26a72a32997363d591807b0d4c31b0bbc8a774bddf
+FROM alpine:latest
 
 EXPOSE 8081/tcp
 EXPOSE 14265/tcp
@@ -44,5 +42,12 @@ COPY ./config_devnet.json /app/config_devnet.json
 COPY ./peering.json /app/peering.json
 COPY ./profiles.json /app/profiles.json
 COPY ./mqtt_config.json /app/mqtt_config.json
+
+RUN addgroup --gid 39999 hornet \
+ && adduser -h /app -s /bin/sh -G hornet -u 39999 -D hornet \
+ && chown hornet:hornet -R /app
+
+WORKDIR "/app"
+USER hornet
 
 ENTRYPOINT ["/app/hornet"]
