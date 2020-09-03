@@ -1,7 +1,10 @@
 package processor
 
 import (
+	"bufio"
 	"errors"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/iotaledger/hive.go/batchhasher"
@@ -35,6 +38,7 @@ const (
 var (
 	workerCount         = batchhasher.CURLP81.GetBatchSize() * batchhasher.CURLP81.GetWorkerCount()
 	ErrInvalidTimestamp = errors.New("invalid timestamp")
+	counter             = 0
 )
 
 // New creates a new processor which parses messages.
@@ -199,6 +203,16 @@ func (proc *Processor) workUnitFor(receivedTxBytes []byte) *CachedWorkUnit {
 
 // processes the given milestone request by parsing it and then replying to the peer with it.
 func (proc *Processor) processMilestoneRequest(p *peer.Peer, data []byte) {
+
+	// FUZZ
+	file, _ := os.Create("/tmp/corpus/MSReq" + strconv.Itoa(counter))
+	counter = counter + 1
+	writer := bufio.NewWriter(file)
+	writer.Write(data)
+	writer.Flush()
+	file.Close()
+	// FUZZ
+
 	msIndex, err := sting.ExtractRequestedMilestoneIndex(data)
 	if err != nil {
 		metrics.SharedServerMetrics.InvalidRequests.Inc()
@@ -230,6 +244,16 @@ func (proc *Processor) processMilestoneRequest(p *peer.Peer, data []byte) {
 
 // processes the given transaction request by parsing it and then replying to the peer with it.
 func (proc *Processor) processTransactionRequest(p *peer.Peer, data []byte) {
+
+	// FUZZ
+	file, _ := os.Create("/tmp/corpus/TXReq" + strconv.Itoa(counter))
+	counter = counter + 1
+	writer := bufio.NewWriter(file)
+	writer.Write(data)
+	writer.Flush()
+	file.Close()
+	// FUZZ
+
 	if len(data) != 49 {
 		return
 	}
@@ -247,6 +271,18 @@ func (proc *Processor) processTransactionRequest(p *peer.Peer, data []byte) {
 
 // gets or creates a new WorkUnit for the given transaction and then processes the WorkUnit.
 func (proc *Processor) processTransaction(p *peer.Peer, data []byte) {
+
+	// FUZZ
+	/*
+		file, _ := os.Create("/tmp/corpus/TX" + strconv.Itoa(counter))
+		counter = counter + 1
+		writer := bufio.NewWriter(file)
+		writer.Write(data)
+		writer.Flush()
+		file.Close()
+	*/
+	// FUZZ
+
 	cachedWorkUnit := proc.workUnitFor(data) // workUnit +1
 	defer cachedWorkUnit.Release()           // workUnit -1
 	workUnit := cachedWorkUnit.WorkUnit()
