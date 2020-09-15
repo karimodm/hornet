@@ -1,10 +1,7 @@
 package processor
 
 import (
-	"bufio"
 	"errors"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/iotaledger/hive.go/batchhasher"
@@ -76,7 +73,7 @@ func New(requestQueue rqueue.Queue, peerManager *peering.Manager, opts *Options)
 		case sting.MessageTypeTransactionRequest:
 			proc.processTransactionRequest(p, data)
 		case sting.MessageTypeMilestoneRequest:
-			proc.processMilestoneRequest(p, data)
+			proc.ProcessMilestoneRequest(p, data)
 		}
 
 		task.Return(nil)
@@ -202,15 +199,17 @@ func (proc *Processor) workUnitFor(receivedTxBytes []byte) *CachedWorkUnit {
 }
 
 // processes the given milestone request by parsing it and then replying to the peer with it.
-func (proc *Processor) processMilestoneRequest(p *peer.Peer, data []byte) {
+func (proc *Processor) ProcessMilestoneRequest(p *peer.Peer, data []byte) {
 
 	// FUZZ
-	file, _ := os.Create("/tmp/corpus/MSReq" + strconv.Itoa(counter))
-	counter = counter + 1
-	writer := bufio.NewWriter(file)
-	writer.Write(data)
-	writer.Flush()
-	file.Close()
+	/*
+		file, _ := os.Create("/tmp/corpus/MSReq" + strconv.Itoa(counter))
+		counter = counter + 1
+		writer := bufio.NewWriter(file)
+		writer.Write(data)
+		writer.Flush()
+		file.Close()
+	*/
 	// FUZZ
 
 	msIndex, err := sting.ExtractRequestedMilestoneIndex(data)
@@ -246,12 +245,14 @@ func (proc *Processor) processMilestoneRequest(p *peer.Peer, data []byte) {
 func (proc *Processor) processTransactionRequest(p *peer.Peer, data []byte) {
 
 	// FUZZ
-	file, _ := os.Create("/tmp/corpus/TXReq" + strconv.Itoa(counter))
-	counter = counter + 1
-	writer := bufio.NewWriter(file)
-	writer.Write(data)
-	writer.Flush()
-	file.Close()
+	/*
+		file, _ := os.Create("/tmp/corpus/TXReq" + strconv.Itoa(counter))
+		counter = counter + 1
+		writer := bufio.NewWriter(file)
+		writer.Write(data)
+		writer.Flush()
+		file.Close()
+	*/
 	// FUZZ
 
 	if len(data) != 49 {

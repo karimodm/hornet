@@ -5,7 +5,9 @@ go 1.15
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/dustin/go-humanize v1.0.0
+	github.com/dvyukov/go-fuzz v0.0.0-20200826052050-32ce4e791247 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.2.1-0.20200506085104-5ee50844ed64
+	github.com/elazarl/go-bindata-assetfs v1.0.1 // indirect
 	github.com/fhmq/hmq v0.0.0-20200624071425-481a61c520fe
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gin-contrib/gzip v0.0.2
@@ -29,6 +31,7 @@ require (
 	github.com/shirou/gopsutil v2.20.7+incompatible
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
+	github.com/stephens2424/writerset v1.0.2 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/willf/bitset v1.1.11

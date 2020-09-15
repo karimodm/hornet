@@ -1,12 +1,7 @@
-// +build gofuzz
-
 package gossip
 
 import (
-	"fmt"
-
-	"github.com/gohornet/hornet/pkg/config"
-	"github.com/iotaledger/hive.go/logger"
+	"github.com/gohornet/hornet/pkg/protocol/sting"
 )
 
 func Fuzz(data []byte) int {
@@ -20,12 +15,14 @@ func Fuzz(data []byte) int {
 		//cli.ParseConfig()
 		//logger.InitGlobalLogger(bogusCfg)
 	*/
-	fmt.Println(data)
-	config.FetchConfig()
-	logger.InitGlobalLogger(config.NodeConfig)
-	plugin := PLUGIN // My own gossip plugin
-	PLUGIN.Events.Configure.Trigger(plugin)
-	PLUGIN.Events.Run.Trigger(plugin)
+	/*
+		config.FetchConfig()
+		logger.InitGlobalLogger(config.NodeConfig)
+		tangle.ConfigureDatabases(config.NodeConfig.GetString(config.CfgDatabasePath))
+		plugin := PLUGIN // My own gossip plugin
+		PLUGIN.Events.Configure.Trigger(plugin)
+		PLUGIN.Events.Run.Trigger(plugin)
+	*/
 	/*
 		  	proc.wp = workerpool.New(func(task workerpool.Task) {
 				p := task.Param(0).(*peer.Peer)
@@ -37,8 +34,14 @@ func Fuzz(data []byte) int {
 				case sting.MessageTypeTransactionRequest:
 					proc.processTransactionRequest(p, data)
 				case sting.MessageTypeMilestoneRequest:
-					proc.processMilestoneRequest(p, data)
+					proc.ProcessMilestoneRequest(p, data)
 				}
 	*/
+	// msgProcessor lives inside gossip package: local scope
+	//msgProcessor.ProcessMilestoneRequest(nil, data)
+	_, err := sting.ExtractRequestedMilestoneIndex(data)
+	if err != nil {
+		return 1
+	}
 	return 0
 }
