@@ -1,9 +1,11 @@
 package protocol
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"strconv"
 	"sync/atomic"
 
@@ -77,6 +79,8 @@ type Events struct {
 
 // Protocol encapsulates the logic of parsing and sending protocol messages.
 type Protocol struct {
+	counter  int
+	Tlverror bool
 	// The protocol features this instance supports.
 	// This variable is only usable after protocol handshake.
 	FeatureSet byte
@@ -114,7 +118,9 @@ func New(conn io.ReadWriteCloser) *Protocol {
 	}
 
 	protocol := &Protocol{
-		conn: conn,
+		counter:  0,
+		Tlverror: false,
+		conn:     conn,
 		Events: Events{
 			HandshakeCompleted: events.NewEvent(events.CallbackCaller),
 			Received:           receiveHandlers,
@@ -179,6 +185,16 @@ func (p *Protocol) Receive(data []byte) {
 	offset := 0
 	length := len(data)
 
+	/*
+		FUZZ
+	*/
+	file, _ := os.Create("/tmp/corpus/p_receive" + strconv.Itoa(p.counter))
+	p.counter = p.counter + 1
+	writer := bufio.NewWriter(file)
+	writer.Write(data)
+	writer.Flush()
+	file.Close()
+
 	// continue to parse messages as long as we have data to consume
 	for offset < length && p.receivingMessage != nil {
 
@@ -203,6 +219,7 @@ func (p *Protocol) Receive(data []byte) {
 			header, err := tlv.ParseHeader(p.receiveBuffer)
 			if err != nil {
 				p.Events.Error.Trigger(err)
+				p.Tlverror = true
 				//_ = p.conn.Close()
 				return
 			}
