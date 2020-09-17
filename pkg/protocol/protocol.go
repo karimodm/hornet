@@ -218,6 +218,9 @@ func (p *Protocol) Receive(data []byte) {
 		// fire the message type's event handler.
 		// note that the message id is valid here because we verified that the message type
 		// exists while parsing the TLV header
+		if p.receivingMessage.ID == sting.MessageTypeHeartbeat {
+			fmt.Println("break me")
+		}
 		p.Events.Received[p.receivingMessage.ID].Trigger(p.receiveBuffer)
 
 		// reset to receiving a header
