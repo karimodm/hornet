@@ -203,7 +203,7 @@ func (p *Protocol) Receive(data []byte) {
 			header, err := tlv.ParseHeader(p.receiveBuffer)
 			if err != nil {
 				p.Events.Error.Trigger(err)
-				_ = p.conn.Close()
+				//_ = p.conn.Close()
 				return
 			}
 
