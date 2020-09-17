@@ -1,11 +1,9 @@
 package protocol
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"strconv"
 	"sync/atomic"
 
@@ -184,16 +182,6 @@ func (p *Protocol) Handshaked() {
 func (p *Protocol) Receive(data []byte) {
 	offset := 0
 	length := len(data)
-
-	/*
-		FUZZ
-	*/
-	file, _ := os.Create("/tmp/corpus/p_receive" + strconv.Itoa(p.counter))
-	p.counter = p.counter + 1
-	writer := bufio.NewWriter(file)
-	writer.Write(data)
-	writer.Flush()
-	file.Close()
 
 	// continue to parse messages as long as we have data to consume
 	for offset < length && p.receivingMessage != nil {
