@@ -21,7 +21,7 @@ const (
 )
 
 // defines the factory function for WorkUnits.
-func workUnitFactory(key []byte) (objectstorage.StorableObject, int, error) {
+func WorkUnitFactory(key []byte) (objectstorage.StorableObject, int, error) {
 	req := &WorkUnit{
 		receivedTxBytes: make([]byte, len(key)),
 		receivedFrom:    make([]*peer.Peer, 0),

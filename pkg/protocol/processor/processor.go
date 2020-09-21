@@ -51,7 +51,7 @@ func New(requestQueue rqueue.Queue, peerManager *peering.Manager, opts *Options)
 	wuCacheOpts := opts.WorkUnitCacheOpts
 	proc.workUnits = objectstorage.New(
 		nil,
-		workUnitFactory,
+		WorkUnitFactory,
 		objectstorage.CacheTime(time.Duration(wuCacheOpts.CacheTimeMs)),
 		objectstorage.PersistenceEnabled(false),
 		objectstorage.KeysOnly(true),
@@ -192,7 +192,7 @@ func (proc *Processor) WorkUnitsSize() int {
 func (proc *Processor) workUnitFor(receivedTxBytes []byte) *CachedWorkUnit {
 	return &CachedWorkUnit{
 		proc.workUnits.ComputeIfAbsent(receivedTxBytes, func(key []byte) objectstorage.StorableObject { // cachedWorkUnit +1
-			cachedWorkUnit, _, _ := workUnitFactory(receivedTxBytes)
+			cachedWorkUnit, _, _ := WorkUnitFactory(receivedTxBytes)
 			return cachedWorkUnit
 		}),
 	}
@@ -288,14 +288,14 @@ func (proc *Processor) processTransaction(p *peer.Peer, data []byte) {
 	defer cachedWorkUnit.Release()           // workUnit -1
 	workUnit := cachedWorkUnit.WorkUnit()
 	workUnit.addReceivedFrom(p, nil)
-	proc.processWorkUnit(workUnit, p)
+	proc.ProcessWorkUnit(workUnit, p)
 }
 
 // tries to process the WorkUnit by first checking in what state it is.
 // if the WorkUnit is invalid (because the underlying transaction is invalid), the given peer is punished.
 // if the WorkUnit is already completed, and the transaction was requested, this function emits a TransactionProcessed event.
 // it is safe to call this function for the same WorkUnit multiple times.
-func (proc *Processor) processWorkUnit(wu *WorkUnit, p *peer.Peer) {
+func (proc *Processor) ProcessWorkUnit(wu *WorkUnit, p *peer.Peer) {
 	wu.processingLock.Lock()
 
 	switch {
@@ -308,7 +308,7 @@ func (proc *Processor) processWorkUnit(wu *WorkUnit, p *peer.Peer) {
 		metrics.SharedServerMetrics.InvalidTransactions.Inc()
 
 		// drop the connection to the peer
-		proc.pm.Remove(p.ID)
+		//proc.pm.Remove(p.ID)
 
 		return
 	case wu.Is(Hashed):
@@ -323,13 +323,13 @@ func (proc *Processor) processWorkUnit(wu *WorkUnit, p *peer.Peer) {
 
 		if wu.wasStale {
 			metrics.SharedServerMetrics.StaleTransactions.Inc()
-			p.Metrics.StaleTransactions.Inc()
+			//p.Metrics.StaleTransactions.Inc()
 			return
 		}
 
 		if tangle.ContainsTransaction(wu.tx.GetTxHash()) {
 			metrics.SharedServerMetrics.KnownTransactions.Inc()
-			p.Metrics.KnownTransactions.Inc()
+			//p.Metrics.KnownTransactions.Inc()
 			return
 		}
 
@@ -382,7 +382,7 @@ func (proc *Processor) processWorkUnit(wu *WorkUnit, p *peer.Peer) {
 	proc.Events.TransactionProcessed.Trigger(hornetTx, request, p)
 
 	// increase the known transaction count for all other peers
-	wu.increaseKnownTxCount(p)
+	//wu.increaseKnownTxCount(p)
 
 	// broadcast the transaction if it wasn't requested and the timestamp is
 	// within what we consider a sensible delta from now
