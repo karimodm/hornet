@@ -15,9 +15,10 @@ func Fuzz(data []byte) int {
 
 	proc := New(nil, nil, opts)
 
-	_wu, _, _ := WorkUnitFactory(data[1:])
+	_wu, _, _ := WorkUnitFactory(data[0 : len(data)-1])
 	wu := _wu.(*WorkUnit)
-	wu.UpdateState(WorkUnitState(data[0]))
+	// Random state, last byte of input
+	wu.UpdateState(WorkUnitState(data[len(data)-1]))
 
 	proc.ProcessWorkUnit(wu, nil)
 
