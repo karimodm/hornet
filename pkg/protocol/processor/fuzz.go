@@ -22,11 +22,17 @@ func Fuzz(data []byte) int {
 
 	proc.ProcessWorkUnit(wu, nil)
 
-	tx, _ := compressed.TransactionFromCompressedBytes(wu.receivedTxBytes)
-	if wu.Is(Hashed) {
-		if !transaction.HasValidNonce(tx, opts.ValidMWM) {
-			panic("WTF?")
+	tx, err := compressed.TransactionFromCompressedBytes(wu.receivedTxBytes)
+	if err != nil {
+		if wu.Is(Hashed) {
+			if !transaction.HasValidNonce(tx, opts.ValidMWM) {
+				panic("WTF?")
+			}
 		}
+	}
+
+	if err != nil {
+		return 1
 	}
 
 	return 0
