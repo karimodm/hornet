@@ -90,3 +90,65 @@ func (s *InMemoryEd25519MilestoneIndexSigner) PublicKeysSet() iotago.MilestonePu
 func (s *InMemoryEd25519MilestoneIndexSigner) SigningFunc() iotago.MilestoneSigningFunc {
 	return s.signingFunc
 }
+
+// RemoteEd25519MilestoneSignerProvider provides RemoteEd25519MilestoneIndexSigner.
+type RemoteEd25519MilestoneSignerProvider struct {
+	remoteEndpoint  string
+	keyManger       *keymanager.KeyManager
+	publicKeysCount int
+}
+
+// NewRemoteEd25519MilestoneSignerProvider create a new RemoteEd25519MilestoneSignerProvider.
+func NewRemoteEd25519MilestoneSignerProvider(remoteEndpoint string, keyManager *keymanager.KeyManager, publicKeysCount int) *RemoteEd25519MilestoneSignerProvider {
+	return &RemoteEd25519MilestoneSignerProvider{
+		remoteEndpoint:  remoteEndpoint,
+		keyManger:       keyManager,
+		publicKeysCount: publicKeysCount,
+	}
+}
+
+// MilestoneIndexSigner returns a new signer for the milestone index.
+func (p *RemoteEd25519MilestoneSignerProvider) MilestoneIndexSigner(index milestone.Index) MilestoneIndexSigner {
+
+	pubKeySet := p.keyManger.GetPublicKeysSetForMilestoneIndex(index)
+
+	pubKeys := []iotago.MilestonePublicKey{}
+	for pubKey := range pubKeySet {
+		pubKeys = append(pubKeys, pubKey)
+	}
+
+	milestoneSignFunc := iotago.RemoteEd25519MilestoneSigner(p.remoteEndpoint, pubKeys)
+
+	return &RemoteEd25519MilestoneIndexSigner{
+		pubKeys:     pubKeys,
+		pubKeySet:   pubKeySet,
+		signingFunc: milestoneSignFunc,
+	}
+}
+
+// PublicKeysCount returns the amount of public keys in a milestone.
+func (p *RemoteEd25519MilestoneSignerProvider) PublicKeysCount() int {
+	return p.publicKeysCount
+}
+
+// RemoteEd25519MilestoneIndexSigner is an in memory signer for a particular milestone.
+type RemoteEd25519MilestoneIndexSigner struct {
+	pubKeys     []iotago.MilestonePublicKey
+	pubKeySet   iotago.MilestonePublicKeySet
+	signingFunc iotago.MilestoneSigningFunc
+}
+
+// PublicKeys returns a slice of the used public keys.
+func (s *RemoteEd25519MilestoneIndexSigner) PublicKeys() []iotago.MilestonePublicKey {
+	return s.pubKeys
+}
+
+// PublicKeysSet returns a map of the used public keys.
+func (s *RemoteEd25519MilestoneIndexSigner) PublicKeysSet() iotago.MilestonePublicKeySet {
+	return s.pubKeySet
+}
+
+// SigningFunc returns a function to sign the particular milestone.
+func (s *RemoteEd25519MilestoneIndexSigner) SigningFunc() iotago.MilestoneSigningFunc {
+	return s.signingFunc
+}
